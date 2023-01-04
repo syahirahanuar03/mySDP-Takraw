@@ -1,0 +1,89 @@
+/* Example sketch to control a stepper motor with TB6560 stepper motor driver and Arduino without a library. More info: https://www.makerguides.com */
+
+#define blocker1PB 47   //blocker 1 open
+#define readyPB 48      //blocker 2 open
+
+
+// Define stepper motor connections and steps per revolution:
+#define M1_dirPin 2  //CW+
+#define M1_stepPin 3 //CLK+
+
+#define M2_dirPin 4  //CW+
+#define M2_stepPin 5 //CLK+
+
+#define stepsPerRevolution 50
+
+void setup() 
+{
+  pinMode(blocker1PB, INPUT_PULLUP);
+  pinMode(readyPB, INPUT_PULLUP);
+  
+  // Declare pins as output:
+  pinMode(M1_dirPin, OUTPUT);
+  pinMode(M1_stepPin, OUTPUT);
+  pinMode(M2_dirPin, OUTPUT);
+  pinMode(M2_stepPin, OUTPUT);
+}
+
+void loop() 
+{
+  // Set the spinning direction clockwise:
+  digitalWrite(dirPin, HIGH);
+
+  // Spin the stepper motor 1 revolution slowly:
+  for (int i = 0; i < stepsPerRevolution; i++) 
+  {
+    // These four lines result in 1 step:
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(1000);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(1000);
+  }
+
+  delay(1000);
+
+  // Set the spinning direction counterclockwise:
+  digitalWrite(dirPin, LOW);
+
+  // Spin the stepper motor 1 revolution quickly:
+  for (int i = 0; i < stepsPerRevolution; i++) 
+  {
+    // These four lines result in 1 step:
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(1000);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(1000);
+  }
+
+  delay(500);
+
+  /*// Set the spinning direction clockwise:
+  digitalWrite(dirPin, HIGH);
+
+  // Spin the stepper motor 5 revolutions fast:
+  for (int i = 0; i < 5 * stepsPerRevolution; i++) 
+  {
+    // These four lines result in 1 step:
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(1000);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(1000);
+  }
+
+  delay(1000);
+
+  // Set the spinning direction counterclockwise:
+  digitalWrite(dirPin, LOW);
+
+  // Spin the stepper motor 5 revolutions fast:
+  for (int i = 0; i < 5 * stepsPerRevolution; i++) 
+  {
+    // These four lines result in 1 step:
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(1000);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(1000);
+  }*/
+
+  delay(1000);
+}
