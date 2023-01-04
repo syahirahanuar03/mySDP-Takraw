@@ -8,6 +8,10 @@
 #define M1_in1 10 // In1  L298 for Clockwise
 #define M1_in2 9  // In2  L298 for Anticlockwise
 
+#define M2_Ena 6 // Enable1 L298 for PWM
+#define M2_in1 8 // In1  L298 for Clockwise
+#define M2_in2 7 // In2  L298 for Anticlockwise
+
 int read_ADC =0;
 int duty_cycle;
 int set = 0;
@@ -25,6 +29,10 @@ pinMode(M1_Ena, OUTPUT);
 pinMode(M1_in1, OUTPUT);
 pinMode(M1_in2, OUTPUT);
 
+pinMode(M2_Ena, OUTPUT);
+pinMode(M2_in1, OUTPUT);
+pinMode(M2_in2, OUTPUT);
+
 }
 
 void loop(){ 
@@ -33,6 +41,7 @@ duty_cycle = map(read_ADC, 0, 1023, 0, 100);
 //duty_cycle_lcd = map(read_ADC, 0, 1023, 0, 100); 
 
 analogWrite(M1_Ena, duty_cycle);
+analogWrite(M2_Ena, duty_cycle);
 
 if(digitalRead (pb_CW) == 0){set = 1;}
 if(digitalRead (pb_St) == 0){set = 0;}
@@ -42,18 +51,24 @@ if(set==0)
 {
   digitalWrite(M1_in1, LOW);  
   digitalWrite(M1_in2, LOW);
+  digitalWrite(M2_in1, LOW);  
+  digitalWrite(M2_in2, LOW);
 }
 
 if(set==1)
 {
   digitalWrite(M1_in1, HIGH);  
   digitalWrite(M1_in2, LOW);
+  digitalWrite(M2_in1, HIGH);  
+  digitalWrite(M2_in2, LOW);
 }
 
 if(set==2)
 { 
   digitalWrite(M1_in1, LOW);  
   digitalWrite(M1_in2, HIGH);
+  digitalWrite(M2_in1, LOW);  
+  digitalWrite(M2_in2, HIGH);
 }
 
 delay(50); 
