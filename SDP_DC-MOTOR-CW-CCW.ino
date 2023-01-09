@@ -47,29 +47,29 @@ if(digitalRead (pb_CW) == 0){set = 1;}
 if(digitalRead (pb_St) == 0){set = 0;}
 if(digitalRead (pb_CCW) == 0){set = 2;}
 
-if(set==0)
-{
-  digitalWrite(M1_in1, LOW);  
-  digitalWrite(M1_in2, LOW);
-  digitalWrite(M2_in1, LOW);  
-  digitalWrite(M2_in2, LOW);
-}
-
-if(set==1)
-{
-  digitalWrite(M1_in1, HIGH);  
-  digitalWrite(M1_in2, LOW);
-  digitalWrite(M2_in1, HIGH);  
-  digitalWrite(M2_in2, LOW);
-}
-
-if(set==2)
-{ 
-  digitalWrite(M1_in1, LOW);  
-  digitalWrite(M1_in2, HIGH);
-  digitalWrite(M2_in1, LOW);  
-  digitalWrite(M2_in2, HIGH);
-}
-
-delay(50); 
+  if(set==0)
+  {
+    digitalWrite(M1_in1, LOW);  
+    digitalWrite(M1_in2, LOW);
+    digitalWrite(M2_in1, LOW);  
+    digitalWrite(M2_in2, LOW);
+  }
+  
+  if(set==1)
+  {
+    digitalWrite(M1_in1, HIGH);  
+    digitalWrite(M1_in2, LOW);
+    digitalWrite(M2_in1, HIGH);  
+    digitalWrite(M2_in2, LOW);
+  }
+  
+  if(set==2)
+  { 
+    digitalWrite(M1_in1, LOW);  
+    digitalWrite(M1_in2, HIGH);
+    digitalWrite(M2_in1, LOW);  
+    digitalWrite(M2_in2, HIGH);
+  }
+  
+  delay(50); 
 }
