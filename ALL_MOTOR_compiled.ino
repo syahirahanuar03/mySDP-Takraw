@@ -1,5 +1,5 @@
 //******************INPUT: PUSH BUTTONS**********************//
-#define startPB     //ALL SWITCHED ON
+//#define startPB     //ALL SWITCHED ON
 
 #define readyPB 25    //+ Blocker 2 open
 #define potentiometer A0
@@ -8,7 +8,7 @@
 #define stopdirPB A3
 #define blocker1PB 27
 
-#define stopPB      //TOTAL SHUT DOWN
+//#define stopPB      //TOTAL SHUT DOWN
 
 //*********************MOTORS**************************//
 //DC MOTOR 1
@@ -29,6 +29,19 @@
 #define M2_dirPin 5  //CW+
 #define M2_stepPin 4 //CLK+
 
+//*******************************************************//
+
+//ULTRASONIC SENSOR
+#define trigPin 41
+#define echoPin 42
+#define buzzer 43
+#define relay 44
+
+// DEFINE VARIABLES
+long duration;
+int distance;
+int safetyDistance;
+
 //STEPS
 #define stepsPerRevolution 50   //90 degree
 
@@ -36,15 +49,19 @@ int read_ADC =0;
 int duty_cycle;
 int set = 0;
 
+int state = 0;
+
 void setup() 
 {
   //Declare pins as input
   pinMode(potentiometer, INPUT);
   pinMode(blocker1PB, INPUT_PULLUP);
   pinMode(readyPB, INPUT_PULLUP);
-  pinMode(cwPB, INPUT_PULLUP);
+  pinMode(cwPB, INPUT_PULLUP);  
   pinMode(ccwPB, INPUT_PULLUP);
   pinMode(stopdirPB, INPUT_PULLUP);
+
+  pinMode(echoPin, INPUT); 
 
   //Declare pins as output
   pinMode(M1_EnA, OUTPUT);
@@ -59,11 +76,21 @@ void setup()
   pinMode(M1_stepPin, OUTPUT);
   pinMode(M2_dirPin, OUTPUT);
   pinMode(M2_stepPin, OUTPUT);
+
+  pinMode(trigPin, OUTPUT); 
+  pinMode(buzzer, OUTPUT);
+  pinMode(relay, OUTPUT);
+
+  Serial.begin(9600);
+
+  Serial.begin(38400);
   
 }
 
 void loop() 
 {
+  //***********************MOTORS*************************//
+  
   read_ADC = analogRead(potentiometer);
   duty_cycle = map(read_ADC, 0, 1023, 0, 100);
 
@@ -166,4 +193,57 @@ void loop()
   }
   
   delay(1000);
+
+//****************************ULTRASONIC SENSOR******************//
+  // Clears the trigPin
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+  
+  // Calculating the distance
+  distance= duration*0.034/2;
+  
+  safetyDistance = distance;
+  
+  if (safetyDistance <= 80){ //Enter the Distance 
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(relay, HIGH);
+  }
+  else{
+    digitalWrite(buzzer, LOW);
+    digitalWrite(relay, LOW);
+  }
+  
+  // Prints the distance on the Serial Monitor
+  Serial.print("Distance: ");
+  Serial.println(distance);
+
+//**********************BLUETOOTH********************//
+
+  if(Serial.available() > 0) // Checks whether data is comming from the serial port
+  { 
+    state = Serial.read(); // Reads the data from the serial port
+  }
+  
+  if (state == '0') 
+  {
+  digitalWrite(ledPin, LOW); // Turn LED OFF
+  Serial.println("LED: OFF"); // Send back, to the phone, the String "LED: ON"
+  state = 0;
+  }
+  
+  else if (state == '1') 
+  {
+    digitalWrite(ledPin, HIGH);
+    Serial.println("LED: ON");;
+    state = 0;
+  }
+//*********************************************************//
 }
