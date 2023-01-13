@@ -1,14 +1,12 @@
 
 //******************INPUT: PUSH BUTTONS**********************//
-#define DCMOTOR_ON 48     //DC MOTOR LAUNCHER ON
-
-#define ledPin 50     //bluetooth
+//#define DCMOTOR_ON 48     //DC MOTOR LAUNCHER ON
+#define startPB 47 //Blocker 1 open
 #define readyPB 48   //+ Blocker 2 open
-#define potentiometer A0
 #define cwPB A1
 #define ccwPB A2
 #define stopdirPB A3
-#define blocker1PB 47 //START PB
+
 
 //#define stopPB      //TOTAL SHUT DOWN
 
@@ -63,17 +61,13 @@ int safetyDistance;
 //STEPS
 #define stepsPerRevolution 50   //90 degree
 
-int read_ADC =0;
-int duty_cycle;
 int set = 0;
 
 void setup() 
 {
   //Declare pins as input
-  pinMode(potentiometer, INPUT);
-  
-  pinMode(DCMOTOR_ON, INPUT_PULLUP);  //Blocker 1 on
-  pinMode(readyPB, INPUT_PULLUP);
+  pinMode(StartPB, INPUT_PULLUP);  //Blocker 1 open
+  pinMode(readyPB, INPUT_PULLUP); //Blocker 2 open
   
   pinMode(cwPB, INPUT_PULLUP);  
   pinMode(ccwPB, INPUT_PULLUP);
@@ -119,12 +113,6 @@ void loop()
   if(Serial.available())
   { 
     //ROTATION CONTROL MOTOR
-    read_ADC = analogRead(potentiometer); 
-    duty_cycle = map(read_ADC, 0, 1023, 0, 100);
-
-    analogWrite(M2_EnA, duty_cycle);
-    analogWrite(M2_EnA, duty_cycle);
-
     if(digitalRead (cwPB) == 0){set = 1;}
     if(digitalRead (stopdirPB) == 0){set = 0;}
     if(digitalRead (ccwPB) == 0){set = 2;}
