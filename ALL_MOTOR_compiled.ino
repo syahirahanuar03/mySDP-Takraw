@@ -1,22 +1,36 @@
-//******************INPUT: PUSH BUTTONS**********************//
-//#define startPB     //ALL SWITCHED ON
 
-#define readyPB 25    //+ Blocker 2 open
+//******************INPUT: PUSH BUTTONS**********************//
+#define DCMOTOR_ON 48     //DC MOTOR LAUNCHER ON
+
+#define ledPin 50     //bluetooth
+#define readyPB 48   //+ Blocker 2 open
 #define potentiometer A0
 #define cwPB A1
 #define ccwPB A2
 #define stopdirPB A3
-#define blocker1PB 27
+#define blocker1PB 47 //START PB
 
 //#define stopPB      //TOTAL SHUT DOWN
 
 //*********************MOTORS**************************//
+
 //DC MOTOR 1
+#define DC1_In1 3
+#define DC1_In2 2
+#define DC1_EnA 14
+
+//DC MOTOR 2
+#define DC2_In1 1
+#define DC2_In2 0
+#define DC2_EnB 15
+
+
+//DC MOTOR WORM 1
 #define M1_EnA 13
 #define M1_in1 12
 #define M1_in2 11
 
-//DC MOTOR 2
+//DC MOTOR WORM 2
 #define M2_EnA 10
 #define M2_in1 9
 #define M2_in2 8
@@ -30,6 +44,10 @@
 #define M2_stepPin 4 //CLK+
 
 //*******************************************************//
+
+//HC-06 BLUETOOTH
+char incoming_value = 0;
+#define LED_Pin 30
 
 //ULTRASONIC SENSOR
 #define trigPin 41
@@ -49,14 +67,14 @@ int read_ADC =0;
 int duty_cycle;
 int set = 0;
 
-int state = 0;
-
 void setup() 
 {
   //Declare pins as input
   pinMode(potentiometer, INPUT);
-  pinMode(blocker1PB, INPUT_PULLUP);
+  
+  pinMode(DCMOTOR_ON, INPUT_PULLUP);  //Blocker 1 on
   pinMode(readyPB, INPUT_PULLUP);
+  
   pinMode(cwPB, INPUT_PULLUP);  
   pinMode(ccwPB, INPUT_PULLUP);
   pinMode(stopdirPB, INPUT_PULLUP);
@@ -64,6 +82,15 @@ void setup()
   pinMode(echoPin, INPUT); 
 
   //Declare pins as output
+
+  pinMode(DC1_In1, OUTPUT);
+  pinMode(DC1_In2, OUTPUT);
+  pinMode(DC1_EnA, OUTPUT);
+
+  pinMode(DC2_In1, OUTPUT);
+  pinMode(DC2_In2, OUTPUT);
+  pinMode(DC2_EnB, OUTPUT);
+  
   pinMode(M1_EnA, OUTPUT);
   pinMode(M1_in1, OUTPUT);
   pinMode(M1_in2, OUTPUT);
@@ -81,169 +108,169 @@ void setup()
   pinMode(buzzer, OUTPUT);
   pinMode(relay, OUTPUT);
 
-  Serial.begin(9600);
+  pinMode(LED_Pin, OUTPUT);
 
-  Serial.begin(38400);
-  
+  Serial.begin(9600);
+  //Serial.begin(38400);
 }
 
 void loop() 
 {
-  //***********************MOTORS*************************//
-  
-  read_ADC = analogRead(potentiometer);
-  duty_cycle = map(read_ADC, 0, 1023, 0, 100);
-
-  analogWrite(M1_EnA, duty_cycle);
-  analogWrite(M2_EnA, duty_cycle);
-
-  if(digitalRead (cwPB) == 0){set = 1;}
-  if(digitalRead (stopdirPB) == 0){set = 0;}
-  if(digitalRead (ccwPB) == 0){set = 2;}
-
-  if(set==0)
-  {
-    digitalWrite(M1_in1, LOW);  
-    digitalWrite(M1_in2, LOW);
-    digitalWrite(M2_in1, LOW);  
-    digitalWrite(M2_in2, LOW);
-  }
-  
-  if(set==1)
-  {
-    digitalWrite(M1_in1, HIGH);  
-    digitalWrite(M1_in2, LOW);
-    digitalWrite(M2_in1, HIGH);  
-    digitalWrite(M2_in2, LOW);
-  }
-  
-  if(set==2)
+  if(Serial.available())
   { 
-    digitalWrite(M1_in1, LOW);  
-    digitalWrite(M1_in2, HIGH);
-    digitalWrite(M2_in1, LOW);  
-    digitalWrite(M2_in2, HIGH);
-  }
+    //ROTATION CONTROL MOTOR
+    read_ADC = analogRead(potentiometer); 
+    duty_cycle = map(read_ADC, 0, 1023, 0, 100);
+
+    analogWrite(M2_EnA, duty_cycle);
+    analogWrite(M2_EnA, duty_cycle);
+
+    if(digitalRead (cwPB) == 0){set = 1;}
+    if(digitalRead (stopdirPB) == 0){set = 0;}
+    if(digitalRead (ccwPB) == 0){set = 2;}
+
+    ////////////////DC MOTOR LAUNCHER HEREEEEEEEEEEEEEEE///////////////////////
+    
+    String Direction = Serial.readString();
+    if(Direction == "UP") //MOTOR CONTROL CW
+    {
+      if(set==1)  //CW
+      {
+        digitalWrite(M1_in1, HIGH);  
+        digitalWrite(M1_in2, LOW);
+        digitalWrite(M2_in1, HIGH);  
+        digitalWrite(M2_in2, LOW);
+      }
+      
+    }
+    
+    if(Direction == "DOWN") //MOTOR CONTROL CCW
+    {
+      if(set==2)  //CCW
+      { 
+        digitalWrite(M1_in1, LOW);  
+        digitalWrite(M1_in2, HIGH);
+        digitalWrite(M2_in1, LOW);  
+        digitalWrite(M2_in2, HIGH);
+      }
+    }
+    if(Direction == "STOP") //MOTOR CONTROL CCW
+    {
+      if(set==0)  //STOP
+      {
+        digitalWrite(M1_in1, LOW);  
+        digitalWrite(M1_in2, LOW);
+        digitalWrite(M2_in1, LOW);  
+        digitalWrite(M2_in2, LOW);
+      }
+    }
+
+    if(Direction == "BALL IN") //STEPPER BLOCKER 1
+    {
+      if (digitalRead(blocker1PB) == LOW)
+      {
+        // Set the spinning direction clockwise:
+        digitalWrite(M1_dirPin, HIGH);
+        
+        // Spin the stepper motor 1 revolution slowly:
+        for (int i = 0; i < stepsPerRevolution; i++) 
+        {
+          // These four lines result in 1 step:
+          digitalWrite(M1_stepPin, HIGH);
+          delayMicroseconds(1000);
+          digitalWrite(M1_stepPin, LOW);
+          delayMicroseconds(1000);
+        }
+    
+        delay(1000);
+    
+        // Set the spinning direction counterclockwise:
+        digitalWrite(M1_dirPin, LOW);
+    
+        // Spin the stepper motor 1 revolution quickly:
+        for (int i = 0; i < stepsPerRevolution; i++) 
+        {
+          // These four lines result in 1 step:
+          digitalWrite(M1_stepPin, HIGH);
+          delayMicroseconds(1000);
+          digitalWrite(M1_stepPin, LOW);
+          delayMicroseconds(1000);
+        }
+      }
+    }
+    if(Direction == "READY") //STEPPER BLOCKER 2 READY
+    {
+      if (digitalRead(readyPB) == LOW)
+      {
+        // Set the spinning direction clockwise:
+        digitalWrite(M2_dirPin, HIGH);
+        
+        // Spin the stepper motor 1 revolution slowly:
+        for (int i = 0; i < stepsPerRevolution; i++) 
+        {
+          // These four lines result in 1 step:
+          digitalWrite(M2_stepPin, HIGH);
+          delayMicroseconds(1000);
+          digitalWrite(M2_stepPin, LOW);
+          delayMicroseconds(1000);
+        }
+    
+        delay(1000);
+    
+        // Set the spinning direction counterclockwise:
+        digitalWrite(M2_dirPin, LOW);
+    
+        // Spin the stepper motor 1 revolution quickly:
+        for (int i = 0; i < stepsPerRevolution; i++) 
+        {
+          // These four lines result in 1 step:
+          digitalWrite(M2_stepPin, HIGH);
+          delayMicroseconds(1000);
+          digitalWrite(M2_stepPin, LOW);
+          delayMicroseconds(1000);
+        }
+    
+        delay(500);
+      }
+      
+      delay(1000);
+    }
+  
   
   delay(50);
 
-  if (digitalRead(blocker1PB) == LOW)
-  {
-    // Set the spinning direction clockwise:
-    digitalWrite(M1_dirPin, HIGH);
-    
-    // Spin the stepper motor 1 revolution slowly:
-    for (int i = 0; i < stepsPerRevolution; i++) 
-    {
-      // These four lines result in 1 step:
-      digitalWrite(M1_stepPin, HIGH);
-      delayMicroseconds(1000);
-      digitalWrite(M1_stepPin, LOW);
-      delayMicroseconds(1000);
-    }
-
-    delay(1000);
-
-    // Set the spinning direction counterclockwise:
-    digitalWrite(M1_dirPin, LOW);
-
-    // Spin the stepper motor 1 revolution quickly:
-    for (int i = 0; i < stepsPerRevolution; i++) 
-    {
-      // These four lines result in 1 step:
-      digitalWrite(M1_stepPin, HIGH);
-      delayMicroseconds(1000);
-      digitalWrite(M1_stepPin, LOW);
-      delayMicroseconds(1000);
-    }
-
-  }
-
-  else if (digitalRead(readyPB) == LOW)
-  {
-    // Set the spinning direction clockwise:
-    digitalWrite(M2_dirPin, HIGH);
-    
-    // Spin the stepper motor 1 revolution slowly:
-    for (int i = 0; i < stepsPerRevolution; i++) 
-    {
-      // These four lines result in 1 step:
-      digitalWrite(M2_stepPin, HIGH);
-      delayMicroseconds(1000);
-      digitalWrite(M2_stepPin, LOW);
-      delayMicroseconds(1000);
-    }
-
-    delay(2000);
-
-    // Set the spinning direction counterclockwise:
-    digitalWrite(M2_dirPin, LOW);
-
-    // Spin the stepper motor 1 revolution quickly:
-    for (int i = 0; i < stepsPerRevolution; i++) 
-    {
-      // These four lines result in 1 step:
-      digitalWrite(M2_stepPin, HIGH);
-      delayMicroseconds(1000);
-      digitalWrite(M2_stepPin, LOW);
-      delayMicroseconds(1000);
-    }
-
-    delay(500);
-  }
-  
-  delay(1000);
-
 //****************************ULTRASONIC SENSOR******************//
-  // Clears the trigPin
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  
-  // Sets the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  duration = pulseIn(echoPin, HIGH);
-  
-  // Calculating the distance
-  distance= duration*0.034/2;
-  
-  safetyDistance = distance;
-  
-  if (safetyDistance <= 80){ //Enter the Distance 
-    digitalWrite(buzzer, HIGH);
-    digitalWrite(relay, HIGH);
+    // Clears the trigPin
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    
+    // Sets the trigPin on HIGH state for 10 micro seconds
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    
+    // Reads the echoPin, returns the sound wave travel time in microseconds
+    duration = pulseIn(echoPin, HIGH);
+    
+    // Calculating the distance
+    distance= duration*0.034/2;
+    
+    safetyDistance = distance;
+    
+    if (safetyDistance <= 80)
+    { //Enter the Distance 
+      digitalWrite(buzzer, HIGH);
+      digitalWrite(relay, HIGH);
+    }
+    else
+    {
+      digitalWrite(buzzer, LOW);
+      digitalWrite(relay, LOW);
+    }
+    
+    // Prints the distance on the Serial Monitor
+    Serial.print("Distance: ");
+    Serial.println(distance);
   }
-  else{
-    digitalWrite(buzzer, LOW);
-    digitalWrite(relay, LOW);
-  }
-  
-  // Prints the distance on the Serial Monitor
-  Serial.print("Distance: ");
-  Serial.println(distance);
 
-//**********************BLUETOOTH********************//
-
-  if(Serial.available() > 0) // Checks whether data is comming from the serial port
-  { 
-    state = Serial.read(); // Reads the data from the serial port
-  }
-  
-  if (state == '0') 
-  {
-  digitalWrite(ledPin, LOW); // Turn LED OFF
-  Serial.println("LED: OFF"); // Send back, to the phone, the String "LED: ON"
-  state = 0;
-  }
-  
-  else if (state == '1') 
-  {
-    digitalWrite(ledPin, HIGH);
-    Serial.println("LED: ON");;
-    state = 0;
-  }
-//*********************************************************//
 }
